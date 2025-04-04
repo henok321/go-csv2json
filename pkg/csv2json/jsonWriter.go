@@ -20,19 +20,26 @@ func WriteJSONFile(path string, csvContent <-chan map[string]string, done chan<-
 
 	defer file.Close()
 
-	first := true
+	counter := 0
 
 	for csv := range csvContent {
 		slog.Info("csv record", "record", csv)
 
-		if first {
+		if counter == 0 {
 			if _, err := file.Write([]byte("[")); err != nil {
 				slog.Error("Error writing to file", "error", err)
 				return err
 			}
-			first = false
-			continue
 		}
+
+		if counter > 0 {
+			if _, err := file.Write([]byte(",")); err != nil {
+				slog.Error("Error writing to file", "error", err)
+				return err
+			}
+		}
+
+		counter++
 
 		jsonData, err := json.Marshal(csv)
 		if err != nil {
@@ -44,10 +51,6 @@ func WriteJSONFile(path string, csvContent <-chan map[string]string, done chan<-
 			slog.Error("Error writing to file", "error", err)
 		}
 
-		if _, err := file.Write([]byte(",")); err != nil {
-			slog.Error("Error writing to file", "error", err)
-			return err
-		}
 	}
 
 	if _, err := file.Write([]byte("]")); err != nil {
