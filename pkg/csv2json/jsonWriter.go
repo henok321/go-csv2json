@@ -18,8 +18,6 @@ func WriteJSONFile(path string, csvContent <-chan map[string]string, done chan<-
 		return err
 	}
 
-	defer file.Close()
-
 	counter := 0
 
 	for csv := range csvContent {
