@@ -9,9 +9,8 @@ import (
 )
 
 func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, bufferSize int) error {
-	defer close(csvContent)
-
 	records := make(chan []string, bufferSize)
+	defer close(records)
 
 	if err := readLines(csvInput, records); err != nil {
 		return err
@@ -52,8 +51,6 @@ func parseLine(record, headers []string) (map[string]string, error) {
 }
 
 func readLines(csvInput io.Reader, records chan<- []string) error {
-	defer close(records)
-
 	csvReader := csv.NewReader(bufio.NewReader(csvInput))
 
 	for {
