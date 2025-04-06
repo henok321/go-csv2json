@@ -8,10 +8,10 @@ import (
 	"log/slog"
 )
 
-func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string) error {
+func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, bufferSize int) error {
 	defer close(csvContent)
 
-	records := make(chan []string, 10)
+	records := make(chan []string, bufferSize)
 
 	if err := readLines(csvInput, records); err != nil {
 		return err

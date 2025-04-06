@@ -12,6 +12,7 @@ import (
 func main() {
 	csvFile := flag.String("csvInput", "", "csv input file")
 	jsonFile := flag.String("jsonOutput", "", "json output file")
+	bufferSize := flag.Int("bufferSize", 1, "number of buffer for parallel conversion (default 1)")
 
 	flag.Parse()
 
@@ -33,15 +34,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	run(csvInput, jsonOutput)
+	StartConversion(csvInput, jsonOutput, *bufferSize)
 }
 
-func run(csvInput io.Reader, jsonOutput io.Writer) {
-	csvContent := make(chan map[string]string, 10)
+func StartConversion(csvInput io.Reader, jsonOutput io.Writer, bufferSize int) {
+	csvContent := make(chan map[string]string, bufferSize)
 	done := make(chan bool, 1)
 
 	go func() {
-		if err := csv2json.ReadCSVFile(csvInput, csvContent); err != nil {
+		if err := csv2json.ReadCSVFile(csvInput, csvContent, bufferSize); err != nil {
 			slog.Error("error reading csv file", "error", err)
 		}
 	}()
