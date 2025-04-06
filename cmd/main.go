@@ -34,6 +34,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	slog.Info("starting conversion", "csvInput", *csvFile, "jsonOutput", *jsonFile, "bufferSize", *bufferSize)
+
 	StartConversion(csvInput, jsonOutput, *bufferSize)
 }
 

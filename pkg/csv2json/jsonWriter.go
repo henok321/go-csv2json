@@ -15,7 +15,7 @@ func WriteJSONFile(jsonOutput io.Writer, csvContent <-chan map[string]string, do
 	counter := 0
 
 	for csv := range csvContent {
-		slog.Info("csv record", "record", csv)
+		slog.Info("write record", "record", csv)
 
 		if counter == 0 {
 			if _, err := jsonOutput.Write([]byte("[")); err != nil {

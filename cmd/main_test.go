@@ -19,7 +19,7 @@ Charlie,Wilson,1995-03-10`)
 
 	actualJSONOutput := &strings.Builder{}
 
-	StartConversion(csvInput, actualJSONOutput, 1)
+	StartConversion(csvInput, actualJSONOutput, 2)
 
 	require.JSONEq(t, expectedJSONOutput, actualJSONOutput.String(), "The JSON output does not match the expected output")
 }

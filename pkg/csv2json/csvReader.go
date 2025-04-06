@@ -10,6 +10,7 @@ import (
 
 func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, bufferSize int) error {
 	records := make(chan []string, bufferSize)
+	defer close(csvContent)
 
 	go func() {
 		if err := readLines(csvInput, records); err != nil {
@@ -32,9 +33,10 @@ func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, buffer
 			slog.Error("Error parsing record", "record", record, "error", err)
 		}
 
+		slog.Info("parse record", "record", record)
+
 		csvContent <- parsedLine
 	}
-	close(csvContent)
 
 	return nil
 }
@@ -53,10 +55,13 @@ func parseLine(record, headers []string) (map[string]string, error) {
 }
 
 func readLines(csvInput io.Reader, records chan<- []string) error {
+	defer close(records)
+
 	csvReader := csv.NewReader(bufio.NewReader(csvInput))
 
 	for {
 		record, err := csvReader.Read()
+		slog.Info("read record from file", "record", record)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
@@ -65,7 +70,6 @@ func readLines(csvInput io.Reader, records chan<- []string) error {
 		}
 		records <- record
 	}
-	close(records)
 
 	return nil
 }
