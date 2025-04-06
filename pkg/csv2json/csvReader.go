@@ -10,11 +10,12 @@ import (
 
 func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, bufferSize int) error {
 	records := make(chan []string, bufferSize)
-	defer close(records)
 
-	if err := readLines(csvInput, records); err != nil {
-		return err
-	}
+	go func() {
+		if err := readLines(csvInput, records); err != nil {
+			slog.Error("Error reading CSV file", "error", err)
+		}
+	}()
 
 	first := true
 	var headers []string
@@ -33,6 +34,7 @@ func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, buffer
 
 		csvContent <- parsedLine
 	}
+	close(csvContent)
 
 	return nil
 }
@@ -63,6 +65,7 @@ func readLines(csvInput io.Reader, records chan<- []string) error {
 		}
 		records <- record
 	}
+	close(records)
 
 	return nil
 }

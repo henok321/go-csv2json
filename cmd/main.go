@@ -40,8 +40,6 @@ func main() {
 func StartConversion(csvInput io.Reader, jsonOutput io.Writer, bufferSize int) {
 	csvContent := make(chan map[string]string, bufferSize)
 	done := make(chan bool, 1)
-	defer close(done)
-	defer close(csvContent)
 
 	go func() {
 		if err := csv2json.ReadCSVFile(csvInput, csvContent, bufferSize); err != nil {
