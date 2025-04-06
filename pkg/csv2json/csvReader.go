@@ -6,15 +6,14 @@ import (
 	"errors"
 	"io"
 	"log/slog"
-	"os"
 )
 
-func ReadCSVFile(path string, csvContent chan<- map[string]string) error {
+func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string) error {
 	defer close(csvContent)
 
 	records := make(chan []string, 10)
 
-	if err := readLines(path, records); err != nil {
+	if err := readLines(csvInput, records); err != nil {
 		return err
 	}
 
@@ -52,17 +51,10 @@ func parseLine(record, headers []string) (map[string]string, error) {
 	return mappedRecord, nil
 }
 
-func readLines(path string, records chan<- []string) error {
+func readLines(csvInput io.Reader, records chan<- []string) error {
 	defer close(records)
 
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	csvReader := csv.NewReader(bufio.NewReader(file))
+	csvReader := csv.NewReader(bufio.NewReader(csvInput))
 
 	for {
 		record, err := csvReader.Read()

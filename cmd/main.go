@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"io"
 	"log/slog"
 	"os"
 
@@ -20,21 +21,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	run(*csvFile, *jsonFile)
+	csvInput, err := os.Open(*csvFile)
+	if err != nil {
+		slog.Error("error opening csv file", "error", err)
+		os.Exit(1)
+	}
+
+	jsonOutput, err := os.Create(*jsonFile)
+	if err != nil {
+		slog.Error("error opening json file", "error", err)
+		os.Exit(1)
+	}
+
+	run(csvInput, jsonOutput)
 }
 
-func run(csvFile, jsonFile string) {
+func run(csvInput io.Reader, jsonOutput io.Writer) {
 	csvContent := make(chan map[string]string, 10)
 	done := make(chan bool, 1)
 
 	go func() {
-		if err := csv2json.ReadCSVFile(csvFile, csvContent); err != nil {
+		if err := csv2json.ReadCSVFile(csvInput, csvContent); err != nil {
 			slog.Error("error reading csv file", "error", err)
 		}
 	}()
 
 	go func() {
-		if err := csv2json.WriteJSONFile(jsonFile, csvContent, done); err != nil {
+		if err := csv2json.WriteJSONFile(jsonOutput, csvContent, done); err != nil {
 			slog.Error("error writing json file", "error", err)
 			os.Exit(1)
 		}

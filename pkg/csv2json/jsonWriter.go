@@ -2,21 +2,15 @@ package csv2json
 
 import (
 	"encoding/json"
+	"io"
 	"log/slog"
-	"os"
 )
 
-func WriteJSONFile(path string, csvContent <-chan map[string]string, done chan<- bool) error {
+func WriteJSONFile(jsonOutput io.Writer, csvContent <-chan map[string]string, done chan<- bool) error {
 	defer func() {
 		done <- true
 		close(done)
 	}()
-
-	file, err := os.Create(path)
-	if err != nil {
-		slog.Error("Error creating file", "error", err)
-		return err
-	}
 
 	counter := 0
 
@@ -24,14 +18,14 @@ func WriteJSONFile(path string, csvContent <-chan map[string]string, done chan<-
 		slog.Info("csv record", "record", csv)
 
 		if counter == 0 {
-			if _, err := file.Write([]byte("[")); err != nil {
+			if _, err := jsonOutput.Write([]byte("[")); err != nil {
 				slog.Error("Error writing to file", "error", err)
 				return err
 			}
 		}
 
 		if counter > 0 {
-			if _, err := file.Write([]byte(",")); err != nil {
+			if _, err := jsonOutput.Write([]byte(",")); err != nil {
 				slog.Error("Error writing to file", "error", err)
 				return err
 			}
@@ -45,13 +39,13 @@ func WriteJSONFile(path string, csvContent <-chan map[string]string, done chan<-
 			continue
 		}
 
-		if _, err := file.Write(jsonData); err != nil {
+		if _, err := jsonOutput.Write(jsonData); err != nil {
 			slog.Error("Error writing to file", "error", err)
 		}
 
 	}
 
-	if _, err := file.Write([]byte("]")); err != nil {
+	if _, err := jsonOutput.Write([]byte("]")); err != nil {
 		slog.Error("Error writing to file", "error", err)
 	}
 
