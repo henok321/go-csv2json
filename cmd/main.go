@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"sync"
 
 	"github.com/henok321/go-csv2json/pkg/csv2json"
 )
@@ -41,20 +42,26 @@ func main() {
 
 func StartConversion(csvInput io.Reader, jsonOutput io.Writer, bufferSize int) {
 	csvContent := make(chan map[string]string, bufferSize)
-	done := make(chan bool, 1)
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
 
 	go func() {
+		defer wg.Done()
 		if err := csv2json.ReadCSVFile(csvInput, csvContent, bufferSize); err != nil {
 			slog.Error("error reading csv file", "error", err)
 		}
 	}()
 
+	wg.Add(1)
+
 	go func() {
-		if err := csv2json.WriteJSONFile(jsonOutput, csvContent, done); err != nil {
+		defer wg.Done()
+		if err := csv2json.WriteJSONFile(jsonOutput, csvContent); err != nil {
 			slog.Error("error writing json file", "error", err)
 			os.Exit(1)
 		}
 	}()
 
-	<-done
+	wg.Wait()
 }

@@ -6,12 +6,7 @@ import (
 	"log/slog"
 )
 
-func WriteJSONFile(jsonOutput io.Writer, csvContent <-chan map[string]string, done chan<- bool) error {
-	defer func() {
-		done <- true
-		close(done)
-	}()
-
+func WriteJSONFile(jsonOutput io.Writer, csvContent <-chan map[string]string) error {
 	counter := 0
 
 	for csv := range csvContent {
