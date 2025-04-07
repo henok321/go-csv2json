@@ -33,7 +33,7 @@ func ReadCSVFile(csvInput io.Reader, csvDataChannel chan<- map[string]string, bu
 			slog.Error("Error parsing record", "record", record, "error", err)
 		}
 
-		slog.Info("parse record", "record", record)
+		slog.Debug("parse record", "record", record)
 
 		csvDataChannel <- parsedLine
 	}
@@ -61,7 +61,7 @@ func readLines(csvInput io.Reader, rawRecords chan<- []string) error {
 
 	for {
 		record, err := csvReader.Read()
-		slog.Info("read record from file", "record", record)
+		slog.Debug("read record from file", "record", record)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
