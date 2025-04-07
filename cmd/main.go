@@ -41,14 +41,14 @@ func main() {
 }
 
 func StartConversion(csvInput io.Reader, jsonOutput io.Writer, bufferSize int) {
-	csvContent := make(chan map[string]string, bufferSize)
+	csvDataChannel := make(chan map[string]string, bufferSize)
 	wg := sync.WaitGroup{}
 
 	wg.Add(1)
 
 	go func() {
 		defer wg.Done()
-		if err := csv2json.ReadCSVFile(csvInput, csvContent, bufferSize); err != nil {
+		if err := csv2json.ReadCSVFile(csvInput, csvDataChannel, bufferSize); err != nil {
 			slog.Error("error reading csv file", "error", err)
 		}
 	}()
@@ -57,7 +57,7 @@ func StartConversion(csvInput io.Reader, jsonOutput io.Writer, bufferSize int) {
 
 	go func() {
 		defer wg.Done()
-		if err := csv2json.WriteJSONFile(jsonOutput, csvContent); err != nil {
+		if err := csv2json.WriteJSONFile(jsonOutput, csvDataChannel); err != nil {
 			slog.Error("error writing json file", "error", err)
 			os.Exit(1)
 		}

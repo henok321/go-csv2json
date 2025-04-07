@@ -8,12 +8,12 @@ import (
 	"log/slog"
 )
 
-func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, bufferSize int) error {
-	records := make(chan []string, bufferSize)
-	defer close(csvContent)
+func ReadCSVFile(csvInput io.Reader, csvDataChannel chan<- map[string]string, bufferSize int) error {
+	rawRecords := make(chan []string, bufferSize)
+	defer close(csvDataChannel)
 
 	go func() {
-		if err := readLines(csvInput, records); err != nil {
+		if err := readLines(csvInput, rawRecords); err != nil {
 			slog.Error("Error reading CSV file", "error", err)
 		}
 	}()
@@ -21,27 +21,27 @@ func ReadCSVFile(csvInput io.Reader, csvContent chan<- map[string]string, buffer
 	first := true
 	var headers []string
 
-	for record := range records {
+	for record := range rawRecords {
 		if first {
 			headers = record
 			first = false
 			continue
 		}
 
-		parsedLine, err := parseLine(record, headers)
+		parsedLine, err := parseRecord(record, headers)
 		if err != nil {
 			slog.Error("Error parsing record", "record", record, "error", err)
 		}
 
 		slog.Info("parse record", "record", record)
 
-		csvContent <- parsedLine
+		csvDataChannel <- parsedLine
 	}
 
 	return nil
 }
 
-func parseLine(record, headers []string) (map[string]string, error) {
+func parseRecord(record, headers []string) (map[string]string, error) {
 	if len(record) != len(headers) {
 		return nil, errors.New("record length does not match headers length")
 	}
@@ -54,8 +54,8 @@ func parseLine(record, headers []string) (map[string]string, error) {
 	return mappedRecord, nil
 }
 
-func readLines(csvInput io.Reader, records chan<- []string) error {
-	defer close(records)
+func readLines(csvInput io.Reader, rawRecords chan<- []string) error {
+	defer close(rawRecords)
 
 	csvReader := csv.NewReader(bufio.NewReader(csvInput))
 
@@ -68,7 +68,7 @@ func readLines(csvInput io.Reader, records chan<- []string) error {
 			}
 			slog.Error("Error reading CSV file", "error", err)
 		}
-		records <- record
+		rawRecords <- record
 	}
 
 	return nil
