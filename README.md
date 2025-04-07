@@ -27,7 +27,7 @@ make build
 set -o allexport
 source .env
 set +o allexport
-./csv2json
+./bin/csv2json
 ```
 
 ## License
